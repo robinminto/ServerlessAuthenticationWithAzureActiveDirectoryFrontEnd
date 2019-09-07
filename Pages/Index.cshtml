@@ -85,8 +85,8 @@
             },
             function () {
                 if (this.status === 200) {
-                    responseText = JSON.parse(this.responseText);
-                    document.getElementById('welcome').innerText = responseText;
+                    var greetingResponse = JSON.parse(this.responseText);
+                    document.getElementById('welcome').innerText = greetingResponse.greeting;
                     log(`Response from GetGreeting: ${responseText}`);
                 } else {
                     log(`GetGreeting responded with HTTP ${this.status}`);
