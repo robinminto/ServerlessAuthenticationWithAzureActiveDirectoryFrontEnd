@@ -1,0 +1,143 @@
+﻿@page
+@model IndexModel
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
+@{
+    ViewData["Title"] = "Home page";
+    var functionAppBaseUrl = Configuration["functionAppBaseUrl"];
+    if (!functionAppBaseUrl.EndsWith("/"))
+    {
+        functionAppBaseUrl += "/";
+    }
+}
+@section Head {
+    <meta name="google" content="notranslate" />
+}
+
+<div class="text-center">
+    <h1 class="display-4" id="welcome">Welcome</h1>
+    <div>
+        <button id="callAuthMe">.auth/me</button>
+        <button id="callAuthLogout">.auth/logout</button>
+    </div>
+    <div>
+        <h2>Log:</h2>
+        <button id="clearLog">Clear</button>
+        <div id="log" translate="no"></div>
+    </div>
+    <p></p>
+</div>
+<script>
+    var functionAppBaseUrl = '@functionAppBaseUrl';
+    var logElement = document.getElementById('log');
+
+    var token = null;
+    var name = null;
+    getAuthData();
+
+    function clearLog() {
+        logElement.innerText = '';
+    }
+    function log(message) {
+        logElement.innerText += message + '\r\n';
+    }
+    function getAuthData() {
+        sendRequest(
+            {
+                method: 'GET',
+                url: '/.auth/me',
+                headers: {
+                    'accept': 'application/json',
+                    'content-type': 'application/json',
+                },
+            },
+            function () {
+                if (this.responseText) {
+                    var jsonResponse = JSON.parse(this.responseText);
+                    token = jsonResponse[0].access_token;
+                    log(`Got access_token: ${token}`);
+                    var claims =  jsonResponse[0].user_claims;
+                    for (var claim in claims) {
+                        if (claims[claim].typ === 'name') {
+                            name = claims[claim].val;
+                        }
+                    }
+                    log(`Got name: ${name}`);
+
+                    callGetGreeting();
+                } else {
+                    log('No access token available');
+                }
+            }
+        );
+    }
+
+    function callGetGreeting() {
+        sendRequest(
+            {
+                method: 'GET',
+                url: `${functionAppBaseUrl}api/Greeting?code=WWlRNeZtC8h5XIHX00jcMMaQR6z3KAWf/DBl8H10AN8TtfGNosWi/w==&name=${name}`,
+                headers: {
+                    'accept': 'application/json',
+                    'content-type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+            },
+            function () {
+                if (this.status === 200) {
+                    responseText = JSON.parse(this.responseText);
+                    document.getElementById('welcome').innerText = responseText;
+                    log(`Response from GetGreeting: ${responseText}`);
+                } else {
+                    log(`GetGreeting responded with HTTP ${this.status}`);
+                }
+            }
+        );
+    }
+    function callAuthMe() {
+        sendRequest(
+            {
+                method: 'GET',
+                url: '/.auth/me',
+                headers: {
+                    'accept': 'application/json',
+                    'content-type': 'application/json',
+                },
+            },
+            function () {
+                log(`Response from .auth/me: ${this.responseText}`);
+            }
+        );
+    }
+    function callAuthLogout() {
+        sendRequest(
+            {
+                method: 'GET',
+                url: '/.auth/logout',
+                headers: {
+                    'accept': 'application/json',
+                    'content-type': 'application/json',
+                },
+            },
+            function () {
+                log('called .auth/logout');
+            }
+        );
+    }
+    function sendRequest(options, handler) {
+        var xhr = new XMLHttpRequest();
+        xhr.open(options.method, options.url);
+        for (header in options.headers) {
+            xhr.setRequestHeader(header, options.headers[header]);
+        }
+        xhr.onload = handler
+        var body = options.body;
+        if (body !== undefined && body !== null && typeof (body) !== 'string') {
+            body = JSON.stringify(body);
+        }
+        xhr.send(body);
+    }
+    document.getElementById('clearLog').addEventListener('click', clearLog);
+    document.getElementById('callAuthMe').addEventListener('click', callAuthMe);
+    document.getElementById('callAuthLogout').addEventListener('click', callAuthLogout);
+</script>
