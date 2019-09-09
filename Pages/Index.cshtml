@@ -29,6 +29,7 @@
 </div>
 <script>
     var functionAppBaseUrl = '@functionAppBaseUrl';
+    var authUrl = '/.auth/me';
     var logElement = document.getElementById('log');
 
     var token = null;
@@ -45,7 +46,7 @@
         sendRequest(
             {
                 method: 'GET',
-                url: '/.auth/me',
+                url: authUrl,
                 headers: {
                     'accept': 'application/json',
                     'content-type': 'application/json',
@@ -55,28 +56,29 @@
                 if (this.responseText) {
                     var jsonResponse = JSON.parse(this.responseText);
                     token = jsonResponse[0].access_token;
-                    log(`Got access_token: ${token}`);
+                    log(`[Response] Got access_token: ${token}`);
                     var claims =  jsonResponse[0].user_claims;
                     for (var claim in claims) {
                         if (claims[claim].typ === 'name') {
                             name = claims[claim].val;
                         }
                     }
-                    log(`Got name: ${name}`);
+                    log(`[Response] Got name: ${name}`);
 
                     callGetGreeting();
                 } else {
-                    log('No access token available');
+                    log('[Response] No access token available');
                 }
             }
         );
     }
 
     function callGetGreeting() {
+        var greetingUrl = `${functionAppBaseUrl}api/Greeting?code=WWlRNeZtC8h5XIHX00jcMMaQR6z3KAWf/DBl8H10AN8TtfGNosWi/w==&name=${name}`;
         sendRequest(
             {
                 method: 'GET',
-                url: `${functionAppBaseUrl}api/Greeting?code=WWlRNeZtC8h5XIHX00jcMMaQR6z3KAWf/DBl8H10AN8TtfGNosWi/w==&name=${name}`,
+                url: greetingUrl,
                 headers: {
                     'accept': 'application/json',
                     'content-type': 'application/json',
@@ -87,9 +89,9 @@
                 if (this.status === 200) {
                     var greetingResponse = JSON.parse(this.responseText);
                     document.getElementById('welcome').innerText = greetingResponse.greeting;
-                    log(`Response from GET Greeting: ${this.responseText}`);
+                    log(`[Response] from GET Greeting: ${this.responseText}`);
                 } else {
-                    log(`GET Greeting responded with HTTP ${this.status}`);
+                    log(`[Response] GET Greeting responded with HTTP ${this.status}`);
                 }
             }
         );
@@ -98,14 +100,14 @@
         sendRequest(
             {
                 method: 'GET',
-                url: '/.auth/me',
+                url: authUrl,
                 headers: {
                     'accept': 'application/json',
                     'content-type': 'application/json',
                 },
             },
             function () {
-                log(`Response from .auth/me: ${this.responseText}`);
+                log(`[Response] from .auth/me: ${this.responseText}`);
             }
         );
     }
@@ -120,11 +122,13 @@
                 },
             },
             function () {
-                log('called .auth/logout');
+                // CORS error prevents this from firing
+                log('[Response] Called .auth/logout');
             }
         );
     }
     function sendRequest(options, handler) {
+        log(`[Request]: ${options.url}`);
         var xhr = new XMLHttpRequest();
         xhr.open(options.method, options.url);
         for (header in options.headers) {
