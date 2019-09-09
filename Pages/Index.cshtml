@@ -1,4 +1,4 @@
-﻿@page
+@page
 @model IndexModel
 @using Microsoft.Extensions.Configuration
 @inject IConfiguration Configuration
@@ -87,9 +87,9 @@
                 if (this.status === 200) {
                     var greetingResponse = JSON.parse(this.responseText);
                     document.getElementById('welcome').innerText = greetingResponse.greeting;
-                    log(`Response from GetGreeting: ${this.responseText}`);
+                    log(`Response from GET Greeting: ${this.responseText}`);
                 } else {
-                    log(`GetGreeting responded with HTTP ${this.status}`);
+                    log(`GET Greeting responded with HTTP ${this.status}`);
                 }
             }
         );
