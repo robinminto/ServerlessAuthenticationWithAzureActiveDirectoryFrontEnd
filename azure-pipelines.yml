@@ -24,23 +24,21 @@ stages:
 
     steps:
     - task: DotNetCoreCLI@2
-      displayName: Build
+      displayName: '.NET core CLI build'
       inputs:
         command: 'build'
-        projects: |
-          **/*.csproj
-        arguments: --output publish_output --configuration Release
+        projects: '**/*.csproj'
+        arguments: '--configuration Release'
 
-    - task: ArchiveFiles@2
-      displayName: 'Archive files'
+    - task: DotNetCoreCLI@2
+      displayName: '.NET core CLI publish'
       inputs:
-        rootFolderOrFile: '$(System.DefaultWorkingDirectory)/publish_output'
-        includeRootFolder: false
-        archiveType: zip
-        archiveFile: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
-        replaceExistingArchive: true
+        command: 'publish'
+        publishWebProjects: true
+        zipAfterPublish: true
+        arguments: '--output $(Build.ArtifactStagingDirectory)/$(Build.BuildId)'
 
-    - publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
+    - publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId)
       artifact: drop
 
 - stage: Deploy
@@ -67,7 +65,6 @@ stages:
               azureSubscription: $(azureSubscription)
               appType: 'webApp'
               WebAppName: $(appName)
-              #packageForLinux: '$(System.DefaultWorkingDirectory)/**/*.zip'
               packageForLinux: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
               enableCustomDeployment: true
               DeploymentType: 'zipDeploy'
