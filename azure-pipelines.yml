@@ -36,9 +36,10 @@ stages:
         command: 'publish'
         publishWebProjects: true
         zipAfterPublish: true
-        arguments: '--output $(Build.ArtifactStagingDirectory)/$(Build.BuildId)'
+        modifyOutputPath: false
+        arguments: '--output $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
 
-    - publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId)
+    - publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
       artifact: drop
 
 - stage: Deploy
