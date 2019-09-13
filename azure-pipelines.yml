@@ -37,7 +37,7 @@ stages:
         publishWebProjects: true
         zipAfterPublish: true
         modifyOutputPath: false
-        arguments: '--output $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+        arguments: '--output $(Build.ArtifactStagingDirectory)/$(Build.BuildId)'
 
     - publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
       artifact: drop
