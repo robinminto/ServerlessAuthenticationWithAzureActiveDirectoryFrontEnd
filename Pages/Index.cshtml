@@ -112,20 +112,7 @@
         );
     }
     function callAuthLogout() {
-        sendRequest(
-            {
-                method: 'GET',
-                url: '/.auth/logout',
-                headers: {
-                    'accept': 'application/json',
-                    'content-type': 'application/json',
-                },
-            },
-            function () {
-                // CORS error prevents this from firing
-                log('[Response] Called .auth/logout');
-            }
-        );
+        window.location.href = '/.auth/logout';
     }
     function sendRequest(options, handler) {
         log(`[Request]: ${options.url}`);
