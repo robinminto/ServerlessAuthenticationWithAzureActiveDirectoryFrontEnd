@@ -39,7 +39,7 @@ stages:
         modifyOutputPath: false
         arguments: '--output $(Build.ArtifactStagingDirectory)/$(Build.BuildId)'
 
-    - publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
+    - publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId)
       artifact: drop
 
 - stage: Deploy
