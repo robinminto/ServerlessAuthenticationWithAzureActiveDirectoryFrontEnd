@@ -112,7 +112,7 @@
         );
     }
     function callAuthLogout() {
-        window.location.href = '/.auth/logout';
+        window.location.href = '/.auth/logout?post_logout_redirect_uri=https%3A%2F%2Fphoto-api.azurewebsites.net%2F.auth%2Flogout';
     }
     function sendRequest(options, handler) {
         log(`[Request]: ${options.url}`);
