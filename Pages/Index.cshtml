@@ -9,6 +9,11 @@
     {
         accountFunctionAppBaseUrl += "/";
     }
+    var photoFunctionAppBaseUrl = Configuration["photoFunctionAppBaseUrl"];
+    if (!photoFunctionAppBaseUrl.EndsWith("/"))
+    {
+        photoFunctionAppBaseUrl += "/";
+    }
 }
 @section Head {
     <meta name="google" content="notranslate" />
@@ -17,11 +22,13 @@
 <div class="text-center">
     <h1 class="display-4" id="welcome">Welcome</h1>
     <h2 class="display-4">Balance:<span id="balance">unknown</span></h2>
+    <div><img id="profilePhoto" src="/images/Portrait_placeholder.png"/></div>
     <div>
         <button id="getAuthData">Get auth data</button>
         <button id="getBalance">Get balance</button>
         <button id="callCredit">Credit</button>
         <button id="callDebit">Debit</button>
+        <button id="getPhoto">Get photo</button>
         <button id="callAuthMe">.auth/me</button>
         <button id="callAuthLogout">.auth/logout</button>
     </div>
@@ -34,6 +41,7 @@
 </div>
 <script>
     var accountFunctionAppBaseUrl = '@accountFunctionAppBaseUrl';
+    var photoFunctionAppBaseUrl = '@photoFunctionAppBaseUrl';
     var authUrl = '/.auth/me';
     var logElement = document.getElementById('log');
 
@@ -149,6 +157,34 @@
             }
         );
     }
+    function getPhoto() {
+        var photoUrl = `${photoFunctionAppBaseUrl}api/ProfilePhoto`;
+        sendRequest(
+            {
+                method: 'GET',
+                url: photoUrl,
+                headers: {
+                    'accept': 'image/*',
+                    'Authorization': 'Bearer ' + token
+                },
+                responseType: 'arraybuffer'
+            },
+            function () {
+                if (this.status === 200) {
+                    var arrayBuffer = this.response;
+                    if (arrayBuffer) {
+                        var u8 = new Uint8Array(arrayBuffer);
+                        var b64encoded = btoa(String.fromCharCode.apply(null, u8));
+                        var mimetype="image/png";
+                        document.getElementById("profilePhoto").src="data:"+mimetype+";base64,"+b64encoded;
+                    }
+                    log(`[Response] from GET Photo: ${this.responseText}`);
+                } else {
+                    log(`[Response] GET Photo responded with HTTP ${this.status}`);
+                }
+            }
+        );
+    }
     function callAuthMe() {
         sendRequest(
             {
@@ -175,7 +211,10 @@
             xhr.setRequestHeader(header, options.headers[header]);
         }
         var responseType = options.responseType;
-        xhr.onload = handler
+        if (responseType !== undefined && responseType !== null) {
+            xhr.responseType = responseType;
+        }
+        xhr.onload = handler;
         var body = options.body;
         if (body !== undefined && body !== null && typeof (body) !== 'string') {
             body = JSON.stringify(body);
@@ -187,6 +226,7 @@
     document.getElementById('getBalance').addEventListener('click', getBalance);
     document.getElementById('callCredit').addEventListener('click', callCredit);
     document.getElementById('callDebit').addEventListener('click', callDebit);
+    document.getElementById('getPhoto').addEventListener('click', getPhoto);
     document.getElementById('callAuthMe').addEventListener('click', callAuthMe);
     document.getElementById('callAuthLogout').addEventListener('click', callAuthLogout);
 </script>
