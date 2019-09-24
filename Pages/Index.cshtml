@@ -167,18 +167,14 @@
                     'accept': 'image/*',
                     'Authorization': 'Bearer ' + token
                 },
-                responseType: 'arraybuffer'
+                responseType: 'blob'
             },
             function () {
                 if (this.status === 200) {
-                    var arrayBuffer = this.response;
-                    if (arrayBuffer) {
-                        var u8 = new Uint8Array(arrayBuffer);
-                        var b64encoded = btoa(String.fromCharCode.apply(null, u8));
-                        var mimetype="image/png";
-                        document.getElementById("profilePhoto").src="data:"+mimetype+";base64,"+b64encoded;
-                    }
-                    log(`[Response] from GET Photo: ${this.responseText}`);
+                    var urlCreator = window.URL || window.webkitURL;
+                    var imageUrl = urlCreator.createObjectURL(this.response);
+                    document.getElementById("profilePhoto").src = imageUrl;
+                    log(`[Response] from GET Photo: ${imageUrl}`);
                 } else {
                     log(`[Response] GET Photo responded with HTTP ${this.status}`);
                 }
