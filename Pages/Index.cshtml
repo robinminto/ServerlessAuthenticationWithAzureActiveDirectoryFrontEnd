@@ -4,10 +4,10 @@
 @inject IConfiguration Configuration
 @{
     ViewData["Title"] = "Home page";
-    var functionAppBaseUrl = Configuration["functionAppBaseUrl"];
-    if (!functionAppBaseUrl.EndsWith("/"))
+    var accountFunctionAppBaseUrl = Configuration["accountFunctionAppBaseUrl"];
+    if (!accountFunctionAppBaseUrl.EndsWith("/"))
     {
-        functionAppBaseUrl += "/";
+        accountFunctionAppBaseUrl += "/";
     }
 }
 @section Head {
@@ -16,7 +16,12 @@
 
 <div class="text-center">
     <h1 class="display-4" id="welcome">Welcome</h1>
+    <h2 class="display-4">Balance:<span id="balance">unknown</span></h2>
     <div>
+        <button id="getAuthData">Get auth data</button>
+        <button id="getBalance">Get balance</button>
+        <button id="callCredit">Credit</button>
+        <button id="callDebit">Debit</button>
         <button id="callAuthMe">.auth/me</button>
         <button id="callAuthLogout">.auth/logout</button>
     </div>
@@ -28,13 +33,12 @@
     <p></p>
 </div>
 <script>
-    var functionAppBaseUrl = '@functionAppBaseUrl';
+    var accountFunctionAppBaseUrl = '@accountFunctionAppBaseUrl';
     var authUrl = '/.auth/me';
     var logElement = document.getElementById('log');
 
     var token = null;
     var name = null;
-    getAuthData();
 
     function clearLog() {
         logElement.innerText = '';
@@ -64,21 +68,19 @@
                         }
                     }
                     log(`[Response] Got name: ${name}`);
-
-                    callGetGreeting();
+                    document.getElementById('welcome').innerText = `Hello ${name}`;
                 } else {
                     log('[Response] No access token available');
                 }
             }
         );
     }
-
-    function callGetGreeting() {
-        var greetingUrl = `${functionAppBaseUrl}api/Greeting?code=WWlRNeZtC8h5XIHX00jcMMaQR6z3KAWf/DBl8H10AN8TtfGNosWi/w==&name=${name}`;
+    function getBalance() {
+        var balanceUrl = `${accountFunctionAppBaseUrl}api/Balance`;
         sendRequest(
             {
                 method: 'GET',
-                url: greetingUrl,
+                url: balanceUrl,
                 headers: {
                     'accept': 'application/json',
                     'content-type': 'application/json',
@@ -87,11 +89,62 @@
             },
             function () {
                 if (this.status === 200) {
-                    var greetingResponse = JSON.parse(this.responseText);
-                    document.getElementById('welcome').innerText = greetingResponse.greeting;
-                    log(`[Response] from GET Greeting: ${this.responseText}`);
+                    var balanceResponse = JSON.parse(this.responseText);
+                    document.getElementById('balance').innerText = balanceResponse.balance;
+                    log(`[Response] from GET Balance: ${this.responseText}`);
                 } else {
-                    log(`[Response] GET Greeting responded with HTTP ${this.status}`);
+                    log(`[Response] GET Balance responded with HTTP ${this.status}`);
+                }
+            }
+        );
+    }
+    function getRandomAmount() {
+        return (Math.random() * 10).toFixed(2);
+    }
+    function callCredit() {
+        var balanceUrl = `${accountFunctionAppBaseUrl}api/Credit`;
+        sendRequest(
+            {
+                method: 'POST',
+                url: balanceUrl,
+                headers: {
+                    'accept': 'application/json',
+                    'content-type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: {
+                    'Amount': getRandomAmount()
+                },
+            },
+            function () {
+                if (this.status === 200) {
+                    log(`[Response] from POST Credit: ${this.responseText}`);
+                } else {
+                    log(`[Response] POST Credit responded with HTTP ${this.status}`);
+                }
+            }
+        );
+    }
+    function callDebit() {
+        var balanceUrl = `${accountFunctionAppBaseUrl}api/Debit`;
+        sendRequest(
+            {
+                method: 'POST',
+                url: balanceUrl,
+                headers: {
+                    'accept': 'application/json',
+                    'content-type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: {
+                    'Amount': getRandomAmount()
+                },
+            },
+            function () {
+                if (this.status === 200) {
+                    log(`[Response] from POST Debit: ${this.responseText}`);
+                } else {
+                    log(`[Response] POST Debit responded with HTTP ${this.status}`);
                 }
             }
         );
@@ -112,7 +165,7 @@
         );
     }
     function callAuthLogout() {
-        window.location.href = '/.auth/logout?post_logout_redirect_uri=https%3A%2F%2Fphoto-api.azurewebsites.net%2F.auth%2Flogout';
+        window.location.href = '/.auth/logout';
     }
     function sendRequest(options, handler) {
         log(`[Request]: ${options.url}`);
@@ -121,6 +174,7 @@
         for (header in options.headers) {
             xhr.setRequestHeader(header, options.headers[header]);
         }
+        var responseType = options.responseType;
         xhr.onload = handler
         var body = options.body;
         if (body !== undefined && body !== null && typeof (body) !== 'string') {
@@ -129,6 +183,10 @@
         xhr.send(body);
     }
     document.getElementById('clearLog').addEventListener('click', clearLog);
+    document.getElementById('getAuthData').addEventListener('click', getAuthData);
+    document.getElementById('getBalance').addEventListener('click', getBalance);
+    document.getElementById('callCredit').addEventListener('click', callCredit);
+    document.getElementById('callDebit').addEventListener('click', callDebit);
     document.getElementById('callAuthMe').addEventListener('click', callAuthMe);
     document.getElementById('callAuthLogout').addEventListener('click', callAuthLogout);
 </script>
